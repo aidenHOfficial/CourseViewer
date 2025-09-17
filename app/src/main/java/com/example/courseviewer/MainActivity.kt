@@ -123,10 +123,7 @@ fun CourseItem(course: Course, myViewModel: CourseViewModel) {
             .clickable { expanded = !expanded }
             .padding(10.dp)
             .fillMaxWidth(),
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        verticalArrangement = Arrangement.Center
-    )
-    {
+    ) {
         if (expanded) {
             Column {
                 Text(
@@ -146,7 +143,8 @@ fun CourseItem(course: Course, myViewModel: CourseViewModel) {
                 )
                 Button(
                     onClick = {
-                        myViewModel.removeCourse(course)
+                        myViewModel.removeCourse(course);
+                        expanded = false;
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(52, 140, 235), // background
@@ -180,7 +178,8 @@ fun CourseList(courseViewModel: CourseViewModel) {
 
     if (orientation == Configuration.ORIENTATION_PORTRAIT) {
         PortraitCourseList(courseViewModel, courseViewInputs)
-    } else {
+    }
+    else {
         LandscapeCourseList(courseViewModel, courseViewInputs)
     }
 }
@@ -192,7 +191,7 @@ fun LandscapeCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cour
             .fillMaxWidth()
             .padding(50.dp),
     ) {
-        val observableList by courseViewModel.courses.collectAsState()
+        val courseList by courseViewModel.courses.collectAsState()
 
         Column {
             OutlinedTextField(
@@ -247,8 +246,8 @@ fun LandscapeCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cour
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(52, 140, 235), // background
-                    contentColor = Color.Black           // text/icon color
+                    containerColor = Color(52, 140, 235),
+                    contentColor = Color.Black
                 )
             ) {
                 Text("Add Course")
@@ -258,8 +257,8 @@ fun LandscapeCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cour
             Modifier
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center)
-        {
+            verticalArrangement = Arrangement.Center
+        ) {
             Row {
                 Text("Course List",
                     fontSize = 25.sp,
@@ -275,7 +274,7 @@ fun LandscapeCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cour
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    items(observableList) { CourseItem(it, courseViewModel) }
+                    items(courseList) { CourseItem(it, courseViewModel) }
                 }
             }
         }
@@ -289,9 +288,10 @@ fun PortraitCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cours
             .fillMaxWidth()
             .padding(50.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
+        verticalArrangement = Arrangement.Center
+    ) {
 
-        val observableList by courseViewModel.courses.collectAsState()
+        val courseList by courseViewModel.courses.collectAsState()
 
         Row {
             Column {
@@ -372,7 +372,7 @@ fun PortraitCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cours
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                items(observableList) { CourseItem(it, courseViewModel) }
+                items(courseList) { CourseItem(it, courseViewModel) }
             }
         }
     }
