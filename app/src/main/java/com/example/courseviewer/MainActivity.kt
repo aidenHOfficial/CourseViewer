@@ -1,5 +1,6 @@
 package com.example.courseviewer
 
+import android.app.Application
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -39,27 +40,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.example.courseviewer.room.CourseEntity
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
-data class Course(
-    val number: Int,
-    val department: String,
-    val location: String
-)
+class CourseViewModel(application: Application) : AndroidViewModel(application) {
 
-class CourseViewModel : ViewModel() {
-    private val _courses = MutableStateFlow<List<Course>>(emptyList())
-    val courses: StateFlow<List<Course>> = _courses
+    val repository = (application as CourseApp).repository
 
-    fun addCourse(course: Course) {
-        _courses.value = _courses.value + course
+
+    val courses = repository.allCourses
+        .map { it.filterNotNull() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addCourse(number: Int, department: String, location: String) {
+        repository.addTask(number, department, location)
     }
 
-    fun removeCourse(course: Course) {
-        _courses.value = _courses.value - course
+    fun removeCourse(number: Int, department: String, location: String) {
+        repository.removeTask(number, department, location)
     }
 }
 
@@ -101,14 +105,14 @@ fun isValidCourse(courseNumber: String, courseDepartment: String, courseLocation
 
 fun handleAddCourse(courseNumber: String, courseDepartment: String, courseLocation: String, viewModel: CourseViewModel): Boolean {
     if (isValidCourse(courseNumber, courseDepartment, courseLocation)){
-        viewModel.addCourse(Course(courseNumber.toInt(), courseDepartment, courseLocation))
+        viewModel.addCourse(courseNumber.toInt(), courseDepartment, courseLocation)
         return true
     }
     return false
 }
 
 @Composable
-fun CourseItem(course: Course, myViewModel: CourseViewModel) {
+fun CourseItem(course: CourseEntity, myViewModel: CourseViewModel) {
     var expanded by remember { mutableStateOf(false) }
 
     Row(
@@ -143,8 +147,8 @@ fun CourseItem(course: Course, myViewModel: CourseViewModel) {
                 )
                 Button(
                     onClick = {
-                        myViewModel.removeCourse(course);
-                        expanded = false;
+                        myViewModel.removeCourse(course.number, course.department, course.location)
+                        expanded = false
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(52, 140, 235), // background
@@ -191,7 +195,7 @@ fun LandscapeCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cour
             .fillMaxWidth()
             .padding(50.dp),
     ) {
-        val courseList by courseViewModel.courses.collectAsState()
+        val courseList by courseViewModel.courses.collectAsState(emptyList())
 
         Column {
             OutlinedTextField(
@@ -291,7 +295,7 @@ fun PortraitCourseList(courseViewModel: CourseViewModel, courseViewInputs: Cours
         verticalArrangement = Arrangement.Center
     ) {
 
-        val courseList by courseViewModel.courses.collectAsState()
+        val courseList by courseViewModel.courses.collectAsState(emptyList())
 
         Row {
             Column {
